@@ -8,15 +8,18 @@ import sendemailfull
 import webbrowser
 import threading
 import dong
-
+import sendemailkosub
+import smtplib
 
 name = ''
 nhietdo = ''
 doam = ''
 meo = ''
 j= 0
+k = -1
+dem = 0
 
-publish.single("khoi/demo/app", "READY", hostname="192.168.0.107") 
+publish.single("khoi/demo/app", "READY", hostname="192.168.43.54") 
 class Application(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
@@ -60,11 +63,11 @@ class Application(Frame):
         self.lamp = "OFF"
 
     def sp(self): 
-        messagebox.showinfo(title = 'Thông báo', message = "Đèn đang: " + self.lamp)
         if(self.lamp == 'ON'):
-            publish.single("khoi/demo/app", "LAMPON", hostname="192.168.0.107") 
+            publish.single("khoi/demo/app", "LAMPON", hostname="192.168.43.54") 
         elif(self.lamp == 'OFF'):
-            publish.single("khoi/demo/app", "LAMPOFF", hostname="192.168.0.107") 
+            publish.single("khoi/demo/app", "LAMPOFF", hostname="192.168.43.54") 
+        messagebox.showinfo(title = 'Thông báo', message = "Đèn đang: " + self.lamp)
 
     def web(self):
         webbrowser.open("http://127.0.0.1:8050")
@@ -108,10 +111,12 @@ def on_message(mqttc, obj, msg):
     global nhietdo
     global doam
     global j
+    global k
     print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
     i = str(msg.payload)
     y = re.findall('[0-9]+',i)
-    print(y)
+    k = i.find('YES')
+    print(k)
     nhietdo = y[0]
     doam = y[2]
     file = open("example.txt", "a")
@@ -119,8 +124,8 @@ def on_message(mqttc, obj, msg):
     file.write(chuoi)
     file.close()
     j += 1
-    label4 = ttk.Label(root, text = y[0] + " C")
-    label5 = ttk.Label(root, text = y[2] + " %")
+    label4 = ttk.Label(root, text = nhietdo + " C")
+    label5 = ttk.Label(root, text = doam + " %")
     label4.grid(row = 4, column = 1)
     label5.grid(row = 4, column = 2)
 
@@ -129,18 +134,31 @@ def on_publish(mqttc, obj, mid):
  
 def on_subscribe(mqttc, obj, mid, granted_qos):
     pass
+
 def on_log(mqttc, obj, level, string):
     pass
 
 def bieudo():
     dong.app.run_server(debug=False)
 
+def mail2():
+    global dem
+    while True:
+        if (k != -1 and dem ==0):
+            email_conn = smtplib.SMTP(sendemailkosub.host, sendemailkosub.port)
+            email_conn.ehlo()
+            email_conn.starttls()
+            email_conn.login(sendemailkosub.username,sendemailkosub.password)
+            email_conn.sendmail(sendemailkosub.from_email, sendemailkosub.to_list, "Co gi do khong dung")
+            email_conn.quit()
+            dem +=1
+
 mqttc = mqtt.Client()
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
-mqttc.connect("192.168.0.107", 1883, 60) #dien IP cua Pi, vd: 192.168.1.77
+mqttc.connect("192.168.43.54", 1883, 60) #dien IP cua Pi, vd: 192.168.1.77
 mqttc.subscribe("khoi/demo/data", 0)    
 
 root = Tk()
@@ -148,5 +166,7 @@ ex = Application(root)
 if __name__ == '__main__':
     thread1 = threading.Thread(target=bieudo)
     thread1.start()
+    thread2 = threading.Thread(target=mail2)
+    thread2.start()
     mqttc.loop_start()
     root.mainloop()
