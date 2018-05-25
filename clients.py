@@ -8,15 +8,25 @@ import lcd
 from time import sleep
 
 ten_cam_bien = Adafruit_DHT.DHT11
-pin_sensor = 25 
+pir = 23
+led = 22
+pin_sensor = 25
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM) # chon kieu danh so chan GPIO la BCM
-#lcd.lcd_init() 
+GPIO.setup(pir, GPIO.IN)#khai bao chan pir la input
+GPIO.setup(led, GPIO.OUT) 
+lcd.lcd_init()
+i = ''
 def on_connect(mqttc, obj, flags, rc):
     pass
  
-def on_message(mqttc, obj, msg): 
+def on_message(mqttc, obj, msg):
+    global i
     print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
-
+    i = str(msg.payload.decode())
+    print(i)
+    
+        
  
 def on_publish(mqttc, obj, mid):
     print("mid: "+str(mid))
@@ -31,16 +41,25 @@ mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
-mqttc.connect("192.168.0.107", 1883, 60) #dien IP cua Pi, vd: 192.168.1.77
+mqttc.connect("192.168.43.6", 1883, 60) #dien IP cua Pi, vd: 192.168.1.77
 mqttc.subscribe("khoi/demo/app", 0)
 mqttc.loop_start()
 while True:
     humid, temp= Adafruit_DHT.read_retry(ten_cam_bien, pin_sensor)
+    detect = 'NO'
+    if GPIO.input(pir):                            #Check whether pir is HIGH
+        detect = 'YES'
+        print ("DETECTED")
+    if (i == 'LAMPON'):
+         GPIO.output(led, 1)
+         print('led on')
+    if (i == 'LAMPOFF'):
+         GPIO.output(led, 0)
+         print('led offf')
     dong_1 = "Nhiet do:" + str(temp) 
     dong_2 = "Do am:" + str(humid) +"%"
-    #lcd.lcd_string(dong_1,0x80)
-    #lcd.lcd_byte(0xDF,0)
-    #lcd.lcd_string(dong_2,0xC0)
-    data_sensor= str(temp) + "," + str(humid)
-    publish.single('khoi/demo/data', data_sensor, hostname="192.168.0.107")
+    lcd.lcd_string(dong_1,0x80)
+    lcd.lcd_string(dong_2,0xC0)
+    data_sensor= str(temp) + "," + str(humid) + "," + detect
+    publish.single('khoi/demo/data', data_sensor, hostname="192.168.43.6")
     sleep(1)
