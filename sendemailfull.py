@@ -5,10 +5,10 @@ import smtplib
 
 host = "smtp.gmail.com"
 port = 587
-username = "vietkhoi1221@gmail.com"
-password = "khoidk00"
+username = "*******@example.com"
+password = "********"
 from_email = username
-to_list = ["vietkhoi1221@gmail.com"]
+to_list = ["*******@example.com"]
 
 
 
@@ -86,13 +86,6 @@ class MessageUser():
 
 obj = MessageUser()
 
-#obj.add_user("Justin", 30,40, email='vietkhoi1221@gmail.com')
-"""
-obj.add_user("jOhn", 94.23, email='vietkhoi1221@gmail.com')
-obj.add_user("Sean", 93.23, email='vietkhoi1221@gmail.com')
-obj.add_user("Emilee", 193.23, email='vietkhoi1221@gmail.com')
-obj.add_user("Marie", 13.23, email='vietkhoi1221@gmail.com')
-"""
 obj.get_details()
 
 obj.send_email()
