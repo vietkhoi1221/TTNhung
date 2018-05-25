@@ -1,10 +1,10 @@
 import smtplib
 host = "smtp.gmail.com"
 port = 587
-username = "vietkhoi1221@gmail.com"
-password = "khoidk00"
+username = "********@example.com"
+password = "*****"
 from_email = username
-to_list = ["vietkhoi1221@gmail.com"]
+to_list = ["********@example.com"]
 
 
 #email_conn = smtplib.SMTP(host, port)
